@@ -1,0 +1,44 @@
+### 1️⃣ (Optionnel) Vider les tables
+# ⚠️ À n'utiliser que si tu veux tout réinitialiser
+DELETE http://localhost:3000/api/dev/reset
+Content-Type: application/json
+###
+
+### 2️⃣ Créer un passager Ali
+POST http://localhost:3000/api/passengers/create
+Content-Type: application/json
+
+{
+  "firstName": "Ali",
+  "lastName": "Test",
+  "userId": "00000000-0000-0000-0000-000000000001"
+}
+
+> {% client.global.set("passengerId", response.body.id) %}
+###
+
+### 3️⃣ Créer une ride pour Ali
+POST http://localhost:3000/api/rides/create
+Content-Type: application/json
+
+{
+  "passengerId": "{{passengerId}}",
+  "origin": "Place Bellecour",
+  "destination": "Gare Part-Dieu"
+}
+
+> {% client.global.set("rideId", response.body.id) %}
+###
+
+### 4️⃣ Lister les rides en attente
+GET http://localhost:3000/api/rides/pending
+
+
+### 5️⃣ Assigner un driver à la ride
+POST http://localhost:3000/api/rides/assign
+Content-Type: application/json
+
+{
+  "rideId": "{{rideId}}",
+  "driverId": "00000000-0000-0000-0000-000000000002"
+}
