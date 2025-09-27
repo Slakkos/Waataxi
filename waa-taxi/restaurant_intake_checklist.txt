@@ -1,0 +1,65 @@
+Informations requises pour l'enregistrement d'un restaurant (collecte sans API – contexte Bénin)
+
+1. Coordonnées générales
+   - Nom commercial exact et raison sociale
+   - Adresse complète (quartier, rue, point de repère, ville, code postal si applicable)
+   - Type d'établissement (restaurant, maquis, dark kitchen, traiteur, etc.)
+   - Numéro RCCM, IFU ou autre identifiant fiscal béninois + forme juridique
+
+2. Contacts principaux
+   - Nom, rôle et coordonnées (téléphone, email) du gérant
+   - Contact opérationnel pour le suivi quotidien des commandes
+   - Contact comptabilité/facturation (email + téléphone)
+
+3. Horaires & capacité opérationnelle
+   - Horaires d'ouverture détaillés par jour (service midi/soir, jours fériés locaux)
+   - Préavis minimum pour la réception des commandes
+   - Capacité maximale de commandes simultanées
+   - Périodes de fermeture planifiées (vacances, congés, événements)
+
+4. Offre culinaire & carte (collecte manuelle structurée)
+   - Remplir un tableur type avec onglets `Plats`, `Menus`, `Options`, `MenuItems`. Ne renommer aucun onglet.
+   - Onglet `Plats` (une ligne par plat) : `categorie`, `nomPlat`, `description`, `prixXOF`, `codeInterne`, `tempsPrepa`, `allergenes`, `regimes`, `stockInitial`. Les valeurs de `nomPlat` doivent être uniques et identiques sur toutes les feuilles.
+   - Onglet `Options` (liens vers un plat via `nomPlat`) : `nomPlat`, `typeOption` (taille, supplément), `nomOption`, `prixSupplementaireXOF`, `estParDefaut` (oui/non). Orthographe identique à l'onglet `Plats` sinon l'import échoue.
+   - Onglet `Menus` (une ligne par menu/formule) : `nomMenu`, `description`, `prixXOF`, `codeInterne`, `stockInitial`.
+   - Onglet `MenuItems` : `nomMenu`, `categorieItem`, `nomPlatInclus`, `quantite`. Les noms doivent correspondre aux entrées précédemment définies.
+   - Fournir visuels HD des plats et du logo (PNG/SVG/JPEG) avec des fichiers nommés `nomPlat.jpg` pour faciliter l'association.
+   - Décrire le processus de mise à jour : personne référente, fréquence prévue (ex : mensuelle), format (même tableur), délai minimum pour appliquer un changement.
+
+5. Gestion du stock et espace partenaire
+   - Méthode actuelle de suivi de stock (carnet, Excel, caisse) et seuils critiques.
+   - Personne qui administrera l'espace partenaire Waataxi pour ajuster le stock en temps réel.
+   - Règles de rupture : message à afficher, produits à masquer automatiquement, délais de réassort.
+   - Liste des produits sans suivi de stock (ex : boissons en libre-service) pour paramétrage spécifique.
+
+6. Logistique commande & livraison
+   - Délai moyen de préparation par type de plat ou tranche horaire
+   - Modalités de packaging (jetable, consigné, dépôt de consignes)
+   - Point de retrait côté coursier + procédure de remise
+   - Numéros d'urgence (WhatsApp, téléphone) en cas de problème livraison
+
+7. Conditions financières (Bénin)
+   - Prix publics en francs CFA (XOF) et éventuels frais de service appliqués au client
+   - Commission négociée ou modèle de rémunération
+   - Moyen de reversement préféré : virement bancaire (RIB/IBAN local) ou mobile money (MTN MoMo, Moov Money) + coordonnées nécessaires
+   - Politique d'annulation/remboursement et gestion des commandes impayées
+
+8. Contenu marketing
+   - Storytelling court à afficher in-app et mots-clés principaux
+   - Réseaux sociaux, site web, promotions de lancement ou offres récurrentes
+   - Événements spéciaux (soirées, brunchs) à mettre en avant
+
+9. Conformité & documents
+   - Licence d'exploitation locale et assurances responsabilité civile
+   - Certificat sanitaire ou attestation d'hygiène exigée par les autorités béninoises
+   - Procédures internes d'hygiène et de conservation des aliments (format libre)
+
+10. Suivi & mises à jour
+    - Contact dédié pour les modifications de carte, d'horaires ou de stock
+    - Format attendu pour envoyer les mises à jour (tableur, email, formulaire)
+    - Délai minimum demandé pour appliquer un changement dans l'application
+
+11. Notes complémentaires
+    - Particularités logistiques (zones à éviter, coupures d'électricité fréquentes, solutions de secours)
+    - Préférences pour la visibilité in-app (catégories, tags locaux)
+    - Toute clause contractuelle ou exigence spécifique à l'établissement
