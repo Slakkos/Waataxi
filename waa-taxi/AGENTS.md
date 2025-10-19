@@ -1,47 +1,30 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- Backend: TypeScript Express API (TypeORM, Jest)
-  - Source: `backend/src` (entities, services, controllers, routes, config)
-  - Tests: `backend/src/**/__tests__/*.test.ts`
-  - Build output: `backend/dist`
-- Mobile: Expo React Native app
-  - Source: `mobile/src` (screens, navigation, services)
-  - Entry: `mobile/index.ts`, `mobile/src/App.tsx`
-  - Assets: `mobile/assets`
+- `backend/src` hosts the API, layered controller → service → repository/entity; keep validation in services and reuse shared DTOs.
+- Domain controllers live in `backend/src/controllers` (PascalCase), services in `backend/src/services` (camelCase), and routing tables under `backend/src/routes/*.routes.ts`.
+- Tests sit beside features in `backend/src/**/__tests__/*.test.ts`; build output lands in `backend/dist`.
+- The Expo client boots from `mobile/index.ts` and `mobile/src/App.tsx`; shared UI lives in `mobile/src/*` and static media under `mobile/assets`.
 
 ## Build, Test, and Development Commands
-- Root:
-  - `npm run dev`: start backend and Expo together.
-  - `npm run dev:backend` | `npm run dev:mobile`: run each app separately.
-- Backend (from `backend/`):
-  - `npm run dev`: start API in dev (ts-node).
-  - `npm run build`: compile to `dist/`.
-  - `npm start`: run `dist/index.js`.
-  - `npm test`: execute Jest tests.
-- Mobile (from `mobile/`):
-  - `npm run start`: start Expo bundler.
-  - `npm run android` | `npm run ios` | `npm run web`: launch targets.
+- `npm run dev` starts backend ts-node and Expo watchers together for local integration.
+- `npm run dev:backend` / `npm run dev:mobile` focus on one side; from `backend`, `npm run dev` reloads the API on changes.
+- `npm run build` then `npm start` (in `backend`) compiles to `dist/index.js` for production rehearsal.
+- `cd backend && npm test` executes the Jest suite via ts-jest; use `--watch` for rapid TDD loops.
 
 ## Coding Style & Naming Conventions
-- TypeScript strict mode; prefer explicit types and no implicit returns.
-- Indentation: 2 spaces; use single quotes (or project default).
-- Filenames: PascalCase for classes/entities (e.g., `User.ts`); camelCase for utils/services (e.g., `driverService.ts`); route files `*.routes.ts`.
-- Keep modules layered: controllers → services → repositories/entities; avoid circular dependencies.
+- TypeScript is strict: declare explicit return types, narrow unions before exporting, and keep model/controller files in PascalCase.
+- Indent with two spaces, prefer single quotes, and order imports core → third-party → local.
+- Reuse shared validators and DTOs to keep input/output parity across layers; keep modules self-documenting with concise comments only where logic is subtle.
 
 ## Testing Guidelines
-- Framework: Jest with ts-jest (backend).
-- Location & naming: place tests under `__tests__` adjacent to code, named `*.test.ts`.
-- Run: `cd backend && npm test`.
-- Scope: test public behavior; mock external I/O and network calls.
+- Author Jest specs alongside features, naming files `*.test.ts`; mock databases, network calls, and Expo native modules.
+- Cover new code paths before PRs; document deliberate gaps in the PR body and convert TODOs into follow-up issues quickly.
 
 ## Commit & Pull Request Guidelines
-- Commits: concise, imperative, scoped by area, e.g., `backend: fix ride fare calc`, `mobile: add login screen`.
-- PRs: include a clear summary, rationale, and screenshots for UI changes; link issues (e.g., `Closes #123`).
-- Checks: backend builds and tests pass; mobile starts via Expo; update docs if config or API changes.
+- Format commits as `<area>: <imperative>` (e.g., `backend: add driver matching`).
+- PRs should describe behavior changes, list local verification (`npm test`, Expo boot), attach screenshots or videos for UI updates, and link issues with `Closes #id`.
 
-## Security & Configuration
-- Never commit secrets. Use `.env` files: `backend/.env`, `mobile/.env`.
-- Backend env vars: `PORT`, `DATABASE_URL`, `GOOGLE_MAPS_API_KEY` (see `backend/src/config/env.ts`).
-- Validate inputs and reuse shared validators where available.
-
+## Security & Configuration Tips
+- Load secrets from `.env` files (`backend/.env`, `mobile/.env`) via `backend/src/config/env.ts`; never commit credentials.
+- Validate external inputs at the service layer, sanitize before persistence or responses, and review dependencies during upgrades.
