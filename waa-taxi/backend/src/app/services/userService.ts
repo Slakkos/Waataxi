@@ -7,7 +7,9 @@ import { Driver } from '../entities/Driver';
  * Crée un nouvel utilisateur avec entité liée (passenger ou driver)
  */
 export async function createUser(data: {
-    phone: string;
+    phone?: string;
+    email?: string;
+    passwordHash?: string | null;
     role: UserRole;
     firstName: string;
     lastName: string;
@@ -16,10 +18,25 @@ export async function createUser(data: {
     const passengerRepo = AppDataSource.getRepository(Passenger);
     const driverRepo = AppDataSource.getRepository(Driver);
 
-    const existing = await userRepo.findOneBy({ phone: data.phone });
-    if (existing) throw new Error('❌ Utilisateur déjà existant');
+    const normalizedPhone = data.phone?.replace(/\s+/g, '').trim() ?? null;
+    const normalizedEmail = data.email?.trim().toLowerCase() ?? null;
 
-    const user = userRepo.create({ phone: data.phone, role: data.role });
+    if (normalizedPhone) {
+        const existingPhone = await userRepo.findOne({ where: { phone: normalizedPhone } });
+        if (existingPhone) throw new Error('❌ Numéro déjà utilisé');
+    }
+
+    if (normalizedEmail) {
+        const existingEmail = await userRepo.findOne({ where: { email: normalizedEmail } });
+        if (existingEmail) throw new Error('❌ Email déjà utilisé');
+    }
+
+    const user = userRepo.create({
+        phone: normalizedPhone,
+        email: normalizedEmail,
+        passwordHash: data.passwordHash ?? null,
+        role: data.role,
+    });
     await userRepo.save(user);
 
     if (data.role === 'passenger') {
@@ -56,7 +73,13 @@ export async function getUserById(id: string): Promise<User | null> {
  */
 export async function getUserByPhone(phone: string): Promise<User | null> {
     const userRepo = AppDataSource.getRepository(User);
-    return userRepo.findOneBy({ phone });
+    const normalized = phone.replace(/\s+/g, '').trim();
+    return userRepo.findOne({ where: { phone: normalized } });
+}
+
+export async function getUserByEmail(email: string): Promise<User | null> {
+    const userRepo = AppDataSource.getRepository(User);
+    return userRepo.findOne({ where: { email: email.trim().toLowerCase() } });
 }
 
 /**

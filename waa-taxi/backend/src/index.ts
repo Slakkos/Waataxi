@@ -12,7 +12,7 @@ import usersRoutes from './routes/users.routes';
 import ridesRoutes from './routes/rides.routes';
 import passengersRoutes from './routes/passengers.routes';
 import driverRoutes from './routes/drivers.routes';
-
+import authRoutes from './routes/auth.routes';
 
 import { errorHandler } from './app/middlewares/errorHandler';
 
@@ -23,16 +23,21 @@ const PORT = parseInt(env.PORT, 10);
 app.use(cors());
 app.use(express.json());
 
-// 📦 Routes
+// 📦 Routes principales
 app.get('/', (_: Request, res: Response) => {
     res.send('🚀 WAA TAXI backend is running!');
 });
 
+app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/rides', ridesRoutes);
 app.use('/api/passengers', passengersRoutes);
 app.use('/api/drivers', driverRoutes);
 
+// ✅ Route de test (accessible depuis PC ou téléphone)
+app.get('/api/ping', (_: Request, res: Response) => {
+    res.json({ ok: true, message: 'Backend WAA TAXI connecté ✅' });
+});
 
 // 🧯 Gestion d'erreurs globales
 app.use(errorHandler);
@@ -48,7 +53,6 @@ AppDataSource.initialize()
     .catch((err: unknown) => {
         const msg = err instanceof Error ? err.message : String(err);
         console.error('❌ Database connection failed:', msg);
-        // Log full error for troubleshooting in development
         console.error(err);
         process.exit(1);
     });

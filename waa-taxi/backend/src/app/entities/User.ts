@@ -4,7 +4,7 @@ import {
     Column,
     CreateDateColumn,
     UpdateDateColumn,
-    OneToOne
+    OneToOne,
 } from 'typeorm';
 import { Driver } from './Driver';
 import { Passenger } from './Passenger';
@@ -16,13 +16,23 @@ export class User {
     @PrimaryGeneratedColumn('uuid')
     id!: string;
 
-    @Column({ unique: true })
-    phone!: string;
+    @Column({ type: 'varchar', length: 30, unique: true, nullable: true })
+    phone?: string | null;
 
-    @Column({ type: 'enum', enum: ['passenger', 'driver', 'admin'], default: 'passenger' })
+    @Column({ type: 'varchar', length: 100, unique: true, nullable: true })
+    email?: string | null;
+
+    @Column({ type: 'varchar', nullable: true })
+    passwordHash?: string | null;
+
+    @Column({
+        type: 'enum',
+        enum: ['passenger', 'driver', 'admin'],
+        default: 'passenger',
+    })
     role!: UserRole;
 
-    @Column({ default: true })
+    @Column({ type: 'boolean', default: true })
     isActive!: boolean;
 
     @CreateDateColumn()
