@@ -31,4 +31,19 @@ export async function getPassengerById(req: Request, res: Response) {
     return res.json(passenger);
 }
 
+export async function updatePassengerProfile(req: Request, res: Response) {
+    const { id } = req.params;
+
+    if (!id) {
+        return res.status(400).json({ error: 'ID requis' });
+    }
+
+    try {
+        const updated = await passengerService.updatePassengerProfile(id, req.body);
+        return res.json(updated);
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Erreur lors de la mise à jour du profil';
+        return res.status(400).json({ error: message });
+    }
+}
 

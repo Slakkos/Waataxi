@@ -7,8 +7,8 @@ import { Driver } from '../entities/Driver';
  * Crée un nouvel utilisateur avec entité liée (passenger ou driver)
  */
 export async function createUser(data: {
-    phone?: string;
-    email?: string;
+    phone?: string | null;
+    email?: string | null;
     passwordHash?: string | null;
     role: UserRole;
     firstName: string;
@@ -18,8 +18,10 @@ export async function createUser(data: {
     const passengerRepo = AppDataSource.getRepository(Passenger);
     const driverRepo = AppDataSource.getRepository(Driver);
 
-    const normalizedPhone = data.phone?.replace(/\s+/g, '').trim() ?? null;
-    const normalizedEmail = data.email?.trim().toLowerCase() ?? null;
+    const normalizedPhoneRaw = data.phone?.replace(/\s+/g, '').trim();
+    const normalizedPhone = normalizedPhoneRaw && normalizedPhoneRaw.length > 0 ? normalizedPhoneRaw : null;
+    const normalizedEmailRaw = data.email?.trim().toLowerCase();
+    const normalizedEmail = normalizedEmailRaw && normalizedEmailRaw.length > 0 ? normalizedEmailRaw : null;
 
     if (normalizedPhone) {
         const existingPhone = await userRepo.findOne({ where: { phone: normalizedPhone } });

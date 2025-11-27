@@ -64,7 +64,7 @@ export async function register(req: Request, res: Response): Promise<Response> {
         // ✅ Correction du typage ici :
         const user = await createUser({
             email: normalizedEmail,
-            phone: normalizedPhone ?? '', // ⚙️ compatibilité stricte
+            phone: normalizedPhone ?? null,
             passwordHash,
             firstName,
             lastName,
@@ -79,9 +79,8 @@ export async function register(req: Request, res: Response): Promise<Response> {
         });
     } catch (error) {
         console.error('❌ register error', error);
-        return res
-            .status(500)
-            .json({ error: 'Erreur lors de la création du compte' });
+        const message = error instanceof Error ? error.message : 'Erreur lors de la création du compte';
+        return res.status(400).json({ error: message });
     }
 }
 

@@ -29,6 +29,12 @@ export class Passenger {
     @Column({ length: 50 })
     lastName!: string;
 
+    @Column({ type: 'varchar', length: 20, nullable: true })
+    gender?: string | null;
+
+    @Column({ type: 'text', nullable: true })
+    avatarUrl?: string | null;
+
     @CreateDateColumn()
     createdAt!: Date;
 
