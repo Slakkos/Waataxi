@@ -24,8 +24,12 @@ router.post('/reject', rideController.rejectRide);
 // 🔍 Détail d’une ride par ID
 router.get('/:rideId', rideController.getRideById);
 
-// 📚 Historique d’un utilisateur
+// 📚 Historique d'un utilisateur
 router.get('/user/:userId', rideController.getRidesByUser);
+// 📚 Historique d'un driver
+router.get('/driver/:driverId', rideController.getRidesByDriver);
+// 📚 Historique d'un passager
+router.get('/passenger/:passengerId', rideController.getRidesByPassenger);
 
 // 🏷️ Rides par statut
 router.get('/status/:status', rideController.getRidesByStatus);

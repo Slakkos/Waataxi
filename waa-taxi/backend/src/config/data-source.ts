@@ -9,9 +9,9 @@ import { Ride } from '../app/entities/Ride';
 export const AppDataSource = new DataSource({
     type: 'postgres',
     url: env.DATABASE_URL,
-    synchronize: true,
+    synchronize: false,
     logging: false,
     entities: [User, Driver, Passenger, Ride],
-    migrations: [],
+    migrations: [__dirname + '/../migrations/*.ts'],
     subscribers: [],
 });

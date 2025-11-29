@@ -217,3 +217,39 @@ export async function getRidesByStatus(req: Request, res: Response): Promise<voi
         res.status(400).json({ error: error.message });
     }
 }
+
+// ✅ Rides par driver
+export async function getRidesByDriver(req: Request, res: Response): Promise<void> {
+    const { driverId } = req.params;
+
+    if (!driverId) {
+        res.status(400).json({ error: 'driverId requis' });
+        return;
+    }
+
+    try {
+        const rides = await rideService.getRidesByDriver(driverId);
+        res.json(rides);
+    } catch (error: any) {
+        console.error('❌ Erreur getRidesByDriver:', error.message);
+        res.status(400).json({ error: error.message });
+    }
+}
+
+// ✅ Rides par passager
+export async function getRidesByPassenger(req: Request, res: Response): Promise<void> {
+    const { passengerId } = req.params;
+
+    if (!passengerId) {
+        res.status(400).json({ error: 'passengerId requis' });
+        return;
+    }
+
+    try {
+        const rides = await rideService.getRidesByPassenger(passengerId);
+        res.json(rides);
+    } catch (error: any) {
+        console.error('❌ Erreur getRidesByPassenger:', error.message);
+        res.status(400).json({ error: error.message });
+    }
+}

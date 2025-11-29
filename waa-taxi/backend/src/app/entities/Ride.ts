@@ -26,8 +26,8 @@ export class Ride {
     @ManyToOne(() => Driver, (driver) => driver.rides, { nullable: true })
     driver?: Driver | null;
 
-    @ManyToOne(() => Passenger, (passenger) => passenger.rides)
-    passenger!: Passenger;
+    @ManyToOne(() => Passenger, (passenger) => passenger.rides, { nullable: true })
+    passenger?: Passenger | null;
 
     @Column()
     origin!: string;
@@ -35,8 +35,29 @@ export class Ride {
     @Column()
     destination!: string;
 
+    // Libellés lisibles (adresses) pour affichage
+    @Column({ type: 'varchar', nullable: true })
+    originLabel?: string | null;
+
+    @Column({ type: 'varchar', nullable: true })
+    destinationLabel?: string | null;
+
+    // Coordonnées LngLat stockées sous forme de texte "lng,lat"
+    @Column({ type: 'varchar', nullable: true })
+    originLngLat?: string | null;
+
+    @Column({ type: 'varchar', nullable: true })
+    destinationLngLat?: string | null;
+
     @Column({ type: 'float' })
     distanceKm!: number;
+
+    // Distances / durées précises si disponibles
+    @Column({ type: 'double precision', nullable: true })
+    distanceMeters?: number | null;
+
+    @Column({ type: 'double precision', nullable: true })
+    durationSeconds?: number | null;
 
     @Column({ type: 'float' })
     estimatedFare!: number;

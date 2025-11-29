@@ -11,16 +11,26 @@ const passengerRepo = AppDataSource.getRepository(Passenger);
 
 // ✅ Créer une ride
 export async function createRide(data: RideInput): Promise<Ride> {
-    const passenger = await passengerRepo.findOne({ where: { id: data.passengerId } });
-    if (!passenger) throw new Error('Passager introuvable');
+    const passenger = data.passengerId ? await passengerRepo.findOne({ where: { id: data.passengerId } }) : null;
+    const driverRepo = AppDataSource.getRepository(Driver);
+    const driver = data.driverId
+        ? await driverRepo.findOne({ where: [{ id: data.driverId }, { userId: data.driverId }] })
+        : null;
 
     const fare = calculateFare(data.distanceKm);
 
     const ride = rideRepo.create({
-        passenger,
+        passenger: passenger ?? null,
+        driver: driver ?? null,
         origin: data.origin,
         destination: data.destination,
+        originLabel: data.originLabel ?? null,
+        destinationLabel: data.destinationLabel ?? null,
+        originLngLat: data.originLngLat ?? null,
+        destinationLngLat: data.destinationLngLat ?? null,
         distanceKm: data.distanceKm,
+        distanceMeters: data.distanceMeters ?? null,
+        durationSeconds: data.durationSeconds ?? null,
         estimatedFare: fare,
         status: 'pending',
     });
@@ -169,6 +179,27 @@ export async function autoCancelUnassigned(timeoutMinutes = 10): Promise<number>
 export async function getRidesByStatus(status: RideStatus): Promise<Ride[]> {
     return await rideRepo.find({
         where: { status },
+        relations: ['passenger', 'driver'],
+        order: { createdAt: 'DESC' },
+    });
+}
+
+// 📂 Rides par driver
+export async function getRidesByDriver(driverId: string): Promise<Ride[]> {
+    const driverRepo = AppDataSource.getRepository(Driver);
+    const driver = await driverRepo.findOne({ where: [{ id: driverId }, { userId: driverId }] });
+    if (!driver) return [];
+    return await rideRepo.find({
+        where: { driver: { id: driver.id } },
+        relations: ['passenger', 'driver'],
+        order: { createdAt: 'DESC' },
+    });
+}
+
+// 📂 Rides par passager
+export async function getRidesByPassenger(passengerId: string): Promise<Ride[]> {
+    return await rideRepo.find({
+        where: { passenger: { id: passengerId } },
         relations: ['passenger', 'driver'],
         order: { createdAt: 'DESC' },
     });
