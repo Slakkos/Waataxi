@@ -5,13 +5,64 @@ import { Driver } from '../entities/Driver';
 import { calculateFare } from '../utils/calculateFare';
 import { RideInput } from '../types/RideInput';
 import { RideStatus } from '../entities/Ride'; // ⚠️ assure-toi que ce type est exporté dans Ride.ts
+import { In } from 'typeorm';
 
 const rideRepo = AppDataSource.getRepository(Ride);
 const passengerRepo = AppDataSource.getRepository(Passenger);
+const driverRepo = AppDataSource.getRepository(Driver);
+
+async function enrichDriverProfile(ride: Ride | null): Promise<Ride | null> {
+    if (!ride?.driver) return ride;
+    const driver = ride.driver;
+    if (!driver.user) {
+        (driver as any).user = { id: driver.userId } as any;
+    }
+    const u: any = driver.user as any;
+    // Complète avec les infos du driver ou de son profil passager (même userId)
+    const maybePassenger = await passengerRepo.findOne({ where: { userId: driver.userId } });
+    if (maybePassenger) {
+        u.avatarUrl = u.avatarUrl ?? maybePassenger.avatarUrl ?? null;
+        u.firstName = u.firstName ?? maybePassenger.firstName;
+        u.lastName = u.lastName ?? maybePassenger.lastName;
+    }
+    u.firstName = u.firstName ?? driver.firstName;
+    u.lastName = u.lastName ?? driver.lastName;
+    (ride as any).driverProfile = {
+        name: [u.firstName, u.lastName].filter(Boolean).join(' ').trim(),
+        avatarUrl: u.avatarUrl ?? null,
+    };
+    return ride;
+}
 
 // ✅ Créer une ride
 export async function createRide(data: RideInput): Promise<Ride> {
-    const passenger = data.passengerId ? await passengerRepo.findOne({ where: { id: data.passengerId } }) : null;
+    let passenger = null;
+    if (data.passengerId) {
+        passenger = await passengerRepo.findOne({ where: { id: data.passengerId } });
+    }
+    if (!passenger && data.passengerUserId) {
+        passenger = await passengerRepo.findOne({ where: { userId: data.passengerUserId } });
+    }
+    // Fallback : si le client envoie le userId dans passengerId par erreur
+    if (!passenger && data.passengerId) {
+        passenger = await passengerRepo.findOne({ where: { userId: data.passengerId } });
+    }
+
+    // Si le passager a déjà une course active, on renvoie cette course (pas de doublon)
+    const activeStatuses: RideStatus[] = ['pending', 'accepted', 'in_progress'];
+    if (passenger) {
+        const existing = await rideRepo.findOne({
+            where: {
+                passenger: { id: passenger.id },
+                status: In(activeStatuses),
+            },
+            relations: ['passenger', 'driver', 'passenger.user', 'driver.user'],
+            order: { createdAt: 'DESC' },
+        });
+        if (existing) {
+            return existing;
+        }
+    }
     const driverRepo = AppDataSource.getRepository(Driver);
     const driver = data.driverId
         ? await driverRepo.findOne({ where: [{ id: data.driverId }, { userId: data.driverId }] })
@@ -40,7 +91,11 @@ export async function createRide(data: RideInput): Promise<Ride> {
 
 // ✅ Rides en attente
 export async function getPendingRides(): Promise<Ride[]> {
-    return await rideRepo.find({ where: { status: 'pending' } });
+    const rides = await rideRepo.find({
+        where: { status: 'pending' },
+        relations: ['passenger', 'driver', 'passenger.user', 'driver.user'],
+    });
+    return await Promise.all(rides.map((r) => enrichDriverProfile(r))) as Ride[];
 }
 
 export async function assignDriver(rideId: string, driverId: string): Promise<Ride> {
@@ -83,6 +138,37 @@ export async function assignDriver(rideId: string, driverId: string): Promise<Ri
     });
 }
 
+// Affectation stricte (utilisée pour l'API assign)
+export async function assignRideStrict(rideId: string, driverId: string): Promise<Ride> {
+    return await AppDataSource.transaction(async (manager) => {
+        const rideRepoTx = manager.getRepository(Ride);
+        const driverRepoTx = manager.getRepository(Driver);
+
+        const ride = await rideRepoTx.findOne({ where: { id: rideId }, relations: ['driver'] });
+        if (!ride) throw new Error('Course introuvable');
+        if (ride.status !== 'pending') throw new Error('Course déjà assignée ou démarrée');
+
+        const driver = await driverRepoTx.findOne({ where: [{ id: driverId }, { userId: driverId }] });
+        if (!driver) throw new Error('Chauffeur introuvable');
+
+        ride.driver = driver;
+        ride.status = 'accepted';
+        driver.isAvailable = false;
+
+        await driverRepoTx.save(driver);
+        return await rideRepoTx.save(ride);
+    });
+}
+
+// Passer en in_progress
+export async function startRide(rideId: string): Promise<Ride> {
+    const ride = await rideRepo.findOne({ where: { id: rideId }, relations: ['driver'] });
+    if (!ride) throw new Error('Course introuvable');
+    if (ride.status !== 'accepted') throw new Error('Course non acceptée');
+    ride.status = 'in_progress';
+    return await rideRepo.save(ride);
+}
+
 
 // ✅ Compléter une ride
 export async function completeRide(rideId: string): Promise<Ride> {
@@ -118,10 +204,11 @@ export async function rejectRide(rideId: string, driverId: string): Promise<Ride
 
 // 🔍 Get ride par ID
 export async function getRideById(rideId: string): Promise<Ride | null> {
-    return await rideRepo.findOne({
+    const ride = await rideRepo.findOne({
         where: { id: rideId },
-        relations: ['passenger', 'driver'],
+        relations: ['passenger', 'driver', 'passenger.user', 'driver.user'],
     });
+    return await enrichDriverProfile(ride);
 }
 
 // 📚 Historique d’un user
@@ -186,14 +273,14 @@ export async function getRidesByStatus(status: RideStatus): Promise<Ride[]> {
 
 // 📂 Rides par driver
 export async function getRidesByDriver(driverId: string): Promise<Ride[]> {
-    const driverRepo = AppDataSource.getRepository(Driver);
     const driver = await driverRepo.findOne({ where: [{ id: driverId }, { userId: driverId }] });
     if (!driver) return [];
-    return await rideRepo.find({
+    const rides = await rideRepo.find({
         where: { driver: { id: driver.id } },
-        relations: ['passenger', 'driver'],
+        relations: ['passenger', 'driver', 'passenger.user', 'driver.user'],
         order: { createdAt: 'DESC' },
     });
+    return await Promise.all(rides.map((r) => enrichDriverProfile(r))) as Ride[];
 }
 
 // 📂 Rides par passager

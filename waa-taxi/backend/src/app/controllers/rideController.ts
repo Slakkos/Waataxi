@@ -131,6 +131,42 @@ export async function cancelRide(req: Request, res: Response): Promise<void> {
     }
 }
 
+// ✅ Assigner un chauffeur à une ride
+export async function assignRide(req: Request, res: Response): Promise<void> {
+    const { rideId, driverId } = req.body;
+
+    if (!rideId || !driverId) {
+        res.status(400).json({ error: 'rideId et driverId requis' });
+        return;
+    }
+
+    try {
+        const ride = await rideService.assignRideStrict(rideId, driverId);
+        res.json(ride);
+    } catch (error: any) {
+        console.error('❌ Erreur assignRide:', error);
+        res.status(400).json({ error: error.message });
+    }
+}
+
+// ✅ Démarrer une ride (passer en in_progress)
+export async function startRide(req: Request, res: Response): Promise<void> {
+    const { rideId } = req.params;
+
+    if (!rideId) {
+        res.status(400).json({ error: 'rideId requis' });
+        return;
+    }
+
+    try {
+        const ride = await rideService.startRide(rideId);
+        res.json(ride);
+    } catch (error: any) {
+        console.error('❌ Erreur startRide:', error);
+        res.status(400).json({ error: error.message });
+    }
+}
+
 
 // ✅ Rejeter une ride
 export async function rejectRide(req: Request, res: Response): Promise<void> {

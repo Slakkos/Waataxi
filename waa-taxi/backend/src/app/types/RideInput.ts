@@ -1,5 +1,6 @@
 export interface RideInput {
     passengerId?: string;
+    passengerUserId?: string;
     driverId?: string;
     origin: string;
     destination: string;

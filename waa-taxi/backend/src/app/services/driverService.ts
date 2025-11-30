@@ -24,3 +24,8 @@ export async function createDriver(data: DriverInput) {
 export async function getAllDrivers() {
     return await driverRepo.find();
 }
+
+// Drivers disponibles (placeholder: renvoie simplement les drivers isAvailable=true)
+export async function getNearbyAvailableDrivers(): Promise<Driver[]> {
+    return await driverRepo.find({ where: { isAvailable: true } });
+}
