@@ -289,3 +289,21 @@ export async function getRidesByPassenger(req: Request, res: Response): Promise<
         res.status(400).json({ error: error.message });
     }
 }
+
+// 📌 3 dernières adresses (origines/destinations) d'un passager
+export async function getRecentAddressesByPassenger(req: Request, res: Response): Promise<void> {
+    const { passengerId } = req.params;
+
+    if (!passengerId) {
+        res.status(400).json({ error: 'passengerId requis' });
+        return;
+    }
+
+    try {
+        const addresses = await rideService.getRecentAddressesByPassenger(passengerId, 3);
+        res.json({ addresses });
+    } catch (error: any) {
+        console.error('❌ Erreur getRecentAddressesByPassenger:', error.message);
+        res.status(400).json({ error: error.message });
+    }
+}

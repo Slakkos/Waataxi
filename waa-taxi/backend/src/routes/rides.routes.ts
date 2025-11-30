@@ -29,6 +29,8 @@ router.get('/user/:userId', rideController.getRidesByUser);
 router.get('/driver/:driverId', rideController.getRidesByDriver);
 // 📚 Historique d'un passager
 router.get('/passenger/:passengerId', rideController.getRidesByPassenger);
+// 📌 3 dernières adresses (passager)
+router.get('/passenger/:passengerId/recent-addresses', rideController.getRecentAddressesByPassenger);
 
 // 🏷️ Rides par statut
 router.get('/status/:status', rideController.getRidesByStatus);

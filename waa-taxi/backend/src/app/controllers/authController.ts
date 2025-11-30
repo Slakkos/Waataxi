@@ -4,6 +4,8 @@ import { AppDataSource } from '../../config/data-source';
 import { Passenger } from '../entities/Passenger';
 import { createUser, getUserByEmail, getUserByPhone } from '../services/userService';
 import type { User, UserRole } from '../entities/User';
+import jwt from 'jsonwebtoken';
+import { env } from '../../config/env';
 
 const passengerRepo = () => AppDataSource.getRepository(Passenger);
 
@@ -16,6 +18,11 @@ async function hydratePassenger(userId: string) {
 function sanitizeUser(user: User) {
     const { passwordHash, ...rest } = user;
     return rest;
+}
+
+function signToken(user: User) {
+    const payload = { sub: user.id, role: user.role };
+    return jwt.sign(payload, env.JWT_SECRET, { expiresIn: '7d' });
 }
 
 export async function register(req: Request, res: Response): Promise<Response> {
@@ -72,8 +79,10 @@ export async function register(req: Request, res: Response): Promise<Response> {
         });
 
         const passenger = await hydratePassenger(user.id);
+        const token = signToken(user);
 
         return res.status(201).json({
+            token,
             user: sanitizeUser(user),
             passenger,
         });
@@ -109,6 +118,7 @@ export async function login(req: Request, res: Response): Promise<Response> {
         const passenger = await hydratePassenger(user.id);
 
         return res.json({
+            token: signToken(user),
             user: sanitizeUser(user),
             passenger,
         });

@@ -13,11 +13,15 @@ import ridesRoutes from './routes/rides.routes';
 import passengersRoutes from './routes/passengers.routes';
 import driverRoutes from './routes/drivers.routes';
 import authRoutes from './routes/auth.routes';
+import chatRoutes from './routes/chat.routes';
 
 import { errorHandler } from './app/middlewares/errorHandler';
+import http from 'http';
+import { initChatSocket } from './chat/socket';
 
 const app = express();
 const PORT = parseInt(env.PORT, 10);
+const server = http.createServer(app);
 
 // 🛡️ Middlewares
 app.use(cors());
@@ -33,6 +37,7 @@ app.use('/api/users', usersRoutes);
 app.use('/api/rides', ridesRoutes);
 app.use('/api/passengers', passengersRoutes);
 app.use('/api/drivers', driverRoutes);
+app.use('/api/chat', chatRoutes);
 
 // ✅ Route de test (accessible depuis PC ou téléphone)
 app.get('/api/ping', (_: Request, res: Response) => {
@@ -46,7 +51,8 @@ app.use(errorHandler);
 AppDataSource.initialize()
     .then(() => {
         console.log('✅ Database connected');
-        app.listen(PORT, () => {
+        initChatSocket(server);
+        server.listen(PORT, () => {
             console.log(`🚀 Server listening on port ${PORT}`);
         });
     })

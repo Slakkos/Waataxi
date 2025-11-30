@@ -17,4 +17,5 @@ export const env = {
     TWILIO_PHONE_NUMBER: getEnvVar('TWILIO_PHONE_NUMBER', ''),
     // Payment provider (optional)
     PAYMENT_PROVIDER: getEnvVar('PAYMENT_PROVIDER', ''),
+    JWT_SECRET: getEnvVar('JWT_SECRET', 'dev-secret'),
 };

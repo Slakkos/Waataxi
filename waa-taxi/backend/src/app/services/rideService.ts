@@ -5,7 +5,7 @@ import { Driver } from '../entities/Driver';
 import { calculateFare } from '../utils/calculateFare';
 import { RideInput } from '../types/RideInput';
 import { RideStatus } from '../entities/Ride'; // ⚠️ assure-toi que ce type est exporté dans Ride.ts
-import { In } from 'typeorm';
+import { In, IsNull } from 'typeorm';
 
 const rideRepo = AppDataSource.getRepository(Ride);
 const passengerRepo = AppDataSource.getRepository(Passenger);
@@ -92,7 +92,7 @@ export async function createRide(data: RideInput): Promise<Ride> {
 // ✅ Rides en attente
 export async function getPendingRides(): Promise<Ride[]> {
     const rides = await rideRepo.find({
-        where: { status: 'pending' },
+        where: { status: 'pending', driver: IsNull() }, // ne proposer que les courses non encore assignées
         relations: ['passenger', 'driver', 'passenger.user', 'driver.user'],
     });
     return await Promise.all(rides.map((r) => enrichDriverProfile(r))) as Ride[];
@@ -285,9 +285,42 @@ export async function getRidesByDriver(driverId: string): Promise<Ride[]> {
 
 // 📂 Rides par passager
 export async function getRidesByPassenger(passengerId: string): Promise<Ride[]> {
-    return await rideRepo.find({
+    const rides = await rideRepo.find({
         where: { passenger: { id: passengerId } },
-        relations: ['passenger', 'driver'],
+        relations: ['passenger', 'driver', 'passenger.user', 'driver.user'],
         order: { createdAt: 'DESC' },
     });
+    return await Promise.all(rides.map((r) => enrichDriverProfile(r))) as Ride[];
+}
+
+// Dernières adresses (origine + destination) d'un passager
+export async function getRecentAddressesByPassenger(passengerId: string, limit = 3): Promise<string[]> {
+    // Query builder pour éviter les soucis de projection (distinctAlias.Ride_id)
+    const rides = await rideRepo
+        .createQueryBuilder('ride')
+        .where('ride.passengerId = :passengerId', { passengerId })
+        .orderBy('ride.createdAt', 'DESC')
+        .limit(Math.max(limit * 2, 6)) // on prend un peu plus pour dédupliquer
+        .getMany();
+
+    const seen = new Set<string>();
+    const ordered: string[] = [];
+
+    for (const ride of rides) {
+        const candidates = [
+            ride.destinationLabel,
+            ride.destination,
+            ride.originLabel,
+            ride.origin,
+        ].filter((v): v is string => !!v && v.trim().length > 0);
+        for (const c of candidates) {
+            const trimmed = c.trim();
+            if (!seen.has(trimmed)) {
+                seen.add(trimmed);
+                ordered.push(trimmed);
+                if (ordered.length >= limit) return ordered;
+            }
+        }
+    }
+    return ordered.slice(0, limit);
 }
